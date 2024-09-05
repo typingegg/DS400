@@ -210,7 +210,12 @@ pop_post_prob <- pop_vs_soda %>%
   adorn_percentages("col") 
 pop_post_prob
 ```
-
+```{r}
+pop_post_prob <- pop_vs_soda %>% 
+  tabyl(region, pop) %>% 
+  adorn_percentages("col") 
+pop_post_prob
+```
 P(S\|A) = (P(S) \* L(S\|A) / P(A)
 
 ```{r}
