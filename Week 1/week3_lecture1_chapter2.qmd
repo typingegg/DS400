@@ -145,6 +145,13 @@ We started with a prior understanding that there's only a 40% chance that the in
 
 ### Challenge
 
+Exploratory Analysis
+
+```{r}
+ggplot(data = pop_vs_soda, aes(x = region, fill = pop))+
+  geom_bar()
+```
+
 Let's put Bayes' Rule into action in another example. Our word choices can reflect where we live. For example, suppose you're watching an interview of somebody that lives in the United States. Without knowing anything about this person, U.S. Census figures provide prior information about the region in which they might live: the Midwest (M), Northeast (N), South (S), or West (W).
 
 ```{r}
@@ -155,11 +162,23 @@ data(pop_vs_soda)
 glimpse(pop_vs_soda)
 ```
 
-1\) Build a prior probability model (an unconditional probability model) with probabilities for where the person is from
+1\) Prior.
+
+Build a prior probability model (an unconditional probability model) with probabilities for where the person is from
+
+```{r}
+prior_region <- c(
+  midwest = 0.21,
+  northeast = 0.17,
+  south = 0.38,
+  west = 0.24
+)
+prior_region
+```
 
 -   Letting S denote the person is from the south
 
-    -   P(S) = 0.24
+    -   P(S) = 0.38
 
 P(S)
 
@@ -182,7 +201,9 @@ region_prob
 
     -   P(M) = 0.39
 
-2\) But then, you see the person point to a fizzy cola drink and say "please pass my pop." Though the country is united in its love of fizzy drinks, it's divided in what they're called, with common regional terms including "pop," "soda," and "coke." This **data**, i.e., the person's use of "pop," provides further information about where they might live.
+2\) Marginal Prior Probability.
+
+But then, you see the person point to a fizzy cola drink and say "please pass my pop." Though the country is united in its love of fizzy drinks, it's divided in what they're called, with common regional terms including "pop," "soda," and "coke." This **data**, i.e., the person's use of "pop," provides further information about where they might live.
 
 -   Determine regional likelihoods that a person uses the word "pop,"
 
@@ -193,32 +214,42 @@ region_prob
 P(A)
 
 ```{r}
-pop_prob <- pop_vs_soda %>% 
-  tabyl(pop) %>% 
-  adorn_totals("row")
-
-pop_prob  
+prior_pop <- sum(prior_region*likelihood)
+prior_pop
 ```
-
-3\) Build a posterior probability model determining the probability that the person is from the south based on using the word "pop": P(S\|A)\
-
-L(S\|A)
 
 ```{r}
-pop_post_prob <- pop_vs_soda %>% 
-  tabyl(pop, region) %>% 
-  adorn_percentages("col") 
-pop_post_prob
+pop_vs_soda %>% 
+  tabyl(pop)
+
+pop_vs_soda %>% 
+  tabyl(region)
 ```
+
+3\) Likelihood. Build a posterior probability model determining the probability that the person is from the south based on using the word "pop": P(S\|A)\
+
+P(S\|A)
+
 ```{r}
 pop_post_prob <- pop_vs_soda %>% 
   tabyl(region, pop) %>% 
-  adorn_percentages("col") 
+  adorn_percentages("row") 
 pop_post_prob
 ```
+
+```{r}
+likelihood <- pop_vs_soda %>% 
+  tabyl(pop, region) %>% 
+  adorn_percentages("col") %>% 
+  filter(pop == "TRUE") %>% 
+  select(-pop) %>% 
+  unlist()
+likelihood
+```
+
 P(S\|A) = (P(S) \* L(S\|A) / P(A)
 
 ```{r}
-prob_calc = ((0.2409192*0.07922231)/0.37402)
+prob_calc = ((prior_region[3]*likelihood[3])/prior_pop)
 prob_calc
 ```
