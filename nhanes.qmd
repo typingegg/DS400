@@ -208,7 +208,7 @@ Posterior
 P(B\|A)= P(B)\*P(A\|B)/P(A)
 
 ```{r}
-probability_over_40*probability_over_40_with_diabetes/probability_over_40
+probability_has_diabetes*probability_over_40_with_diabetes/probability_over_40
 ```
 
 
