@@ -1,6 +1,10 @@
 ---
 title: "Naive Bayes Classification Assignment"
-format: html
+author: "Eugene Garvilles"
+format:
+  pdf:
+    documentclass: scrartcl
+    papersize: letter
 editor: visual
 ---
 
@@ -41,28 +45,35 @@ glimpse(fake_news)
 
 -   Type (fake vs real)
 
-```{r}
-ggplot(fake_news, aes(x=type, fill = type)) + geom_bar()
+```{r, fig.width=4, fig.height=3}
+ggplot(fake_news, aes(x=type, fill = type)) + geom_bar() +
+  theme_minimal()
 ```
 
 -   Number of words in the title (numeric value)
 
-```{r}
+```{r, fig.width=3, fig.height=2}
 fake_news$title_words
 
-ggplot(fake_news, aes(title_words, fill = type)) + geom_histogram(binwidth = 0.5) + facet_wrap(~type)
+ggplot(fake_news, aes(title_words, fill = type)) + 
+  geom_histogram(binwidth = 0.5) + 
+  facet_wrap(~type) + 
+  theme_minimal()
 ```
 
 -   Negative associations (numeric value)
 
-```{r}
-ggplot(fake_news, aes(negative, fill = type)) + geom_density(kernel = "gaussian", alpha = 0.2)
+```{r, fig.width=3, fig.height=2}
+ggplot(fake_news, aes(negative, fill = type)) + 
+  geom_density(kernel = "gaussian", alpha = 0.2) +
+  theme_minimal()
 ```
 
 -   Exclamation point in the title (true vs false)
 
-```{r}
-ggplot(fake_news, aes(title_has_excl, fill = type)) + geom_bar()
+```{r, fig.width=4, fig.height=3}
+ggplot(fake_news, aes(title_has_excl, fill = type)) + geom_bar() +
+  theme_minimal()
 ```
 
 ### Interpretation of Visualization - 2 points
@@ -78,8 +89,10 @@ Based on these three features (15-word title, 6% of its words have negative asso
 Below, insert the code chunks and highlight your answer
 
 ```{r}
-fake_news_NB <- naiveBayes(type ~ title_words + negative + title_has_excl, data = fake_news)
-our_fake_news <- data.frame(title_words = 15, negative = 6, title_has_excl = FALSE)
+fake_news_NB <- naiveBayes(type ~ title_words + negative + title_has_excl, 
+                           data = fake_news)
+our_fake_news <- data.frame(title_words = 15, negative = 6, 
+                            title_has_excl = FALSE)
 predict(fake_news_NB, newdata = our_fake_news, type = "raw")
 ```
 
@@ -163,7 +176,8 @@ fake_news_NB1 <- predict(fake_news_NB, newdata = our_fake_news, type = "raw")[1,
 ```
 
 ```{r}
-#rounded to 6 decimal places, this shows that the naiveBayes() above is equal to the dnorm approach
+# rounded to 6 decimal places, this shows that the naiveBayes() 
+# above is equal to the dnorm approach
 round(fake_news_NB1, 6) == round(fake_news_NB2, 6) 
 ```
 
