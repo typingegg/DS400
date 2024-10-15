@@ -29,56 +29,178 @@ data(fake_news)
 
 [**Exercise 14.7**](https://www.bayesrulesbook.com/chapter-14#exercises-13) **Fake news: three predictors**
 
-Suppose a ***new news article*** is posted online – it has a 15-word title, 6% of its words have negative associations, and its title *doesn’t* have an exclamation point. We want to know if it is fake or real
+Suppose a ***new news article*** is posted online -- it has a 15-word title, 6% of its words have negative associations, and its title *doesn't* have an exclamation point. We want to know if it is fake or real
 
 ### Visualization (Exploratory Data Analysis) - 2 points
 
 Below, insert a code chunk(s) and use `ggplot` to visualize the features of the data we are interested in. This can be one or multiple visualizations
 
+```{r}
+glimpse(fake_news)
+```
+
 -   Type (fake vs real)
+
+```{r}
+ggplot(fake_news, aes(x=type, fill = type)) + geom_bar()
+```
 
 -   Number of words in the title (numeric value)
 
+```{r}
+fake_news$title_words
+
+ggplot(fake_news, aes(title_words, fill = type)) + geom_histogram(binwidth = 0.5) + facet_wrap(~type)
+```
+
 -   Negative associations (numeric value)
 
+```{r}
+ggplot(fake_news, aes(negative, fill = type)) + geom_density(kernel = "gaussian", alpha = 0.2)
+```
+
 -   Exclamation point in the title (true vs false)
+
+```{r}
+ggplot(fake_news, aes(title_has_excl, fill = type)) + geom_bar()
+```
 
 ### Interpretation of Visualization - 2 points
 
 Below, write a few sentences explaining whether or not this ***new news article*** is true or fake solely using your visualization above
 
+Based on the category "type", I would intuitively classify this news news article as true due to the amount of more counts of real than fake. However, diving deeper into the other visualizations and the conditions we set, it may look like the probability may be more fake than real. The histogram visualizing word titles at 15 has more type fake than real. The density plot of negative associations at 6% has more fake than real. However, the barplot where the title doesn't have exclamation points have more type real than fake. Having two out of the three conditions that lean to being more likely fake than real may affect our assumptions that this news news article may be more likely fake than true.
+
 ### Perform Naive Bayes Classification - 3 points
 
-Based on these three features (15-word title, 6% of its words have negative associations, and its title *doesn’t* have an exclamation point), utilize naive Bayes classification to calculate the posterior probability that the article is real. Do so using `naiveBayes()` with `predict()`.
+Based on these three features (15-word title, 6% of its words have negative associations, and its title *doesn't* have an exclamation point), utilize naive Bayes classification to calculate the posterior probability that the article is real. Do so using `naiveBayes()` with `predict()`.
 
 Below, insert the code chunks and highlight your answer
+
+```{r}
+fake_news_NB <- naiveBayes(type ~ title_words + negative + title_has_excl, data = fake_news)
+our_fake_news <- data.frame(title_words = 15, negative = 6, title_has_excl = FALSE)
+predict(fake_news_NB, newdata = our_fake_news, type = "raw")
+```
+
+**Based on the three features, the posterior probability that the article is real is 12.24%.**
 
 ### Break Down the Model - 5 points
 
 Similar to the penguins example, we are going to break down the model we created above. To do this we need to find:
 
+```{r}
+fake_news_NB
+```
+
 -   Probability(15 - word title\| article is real) using `dnorm()`
+
+    ```{r}
+    dnorm(15, mean = 10.42222, sd = 3.204554)
+    ```
 
 -   Probability(6% of words have negative associations \| article is real) using `dnorm()`
 
+    ```{r}
+    dnorm(6, mean = 2.806556, sd = 1.190917)
+    ```
+
 -   Probability(no exclamation point in title \| article is real)
+
+    ```{r}
+    fake_news %>% 
+      tabyl(type, title_has_excl) %>% 
+      adorn_percentages("row")
+    ```
 
     -   Multiply these probabilities and save as the object **`probs_real`**
 
+    ```{r}
+    #table(fake_news$type) # i was trying to get the count between types
+
+    probs_real <- (90/150) * 0.04487606 * 0.00919695 * 0.9777778
+    probs_real
+    ```
+
 -   Probability(15 - word title\| article is fake) using `dnorm()`
+
+    ```{r}
+    dnorm(15, mean = 12.31667, sd = 3.743884 )
+    ```
 
 -   Probability(6% of words have negative associations \| article is fake) using `dnorm()`
 
+    ```{r}
+    dnorm(6, mean = 3.606333, sd = 1.466429 )
+    ```
+
 -   Probability(no exclamation point in title \| article is fake)
+
+    ```{r}
+    fake_news %>% 
+      tabyl(type, title_has_excl) %>% 
+      adorn_percentages("row")
+    ```
 
     -   Multiply these probabilities and save as the object **`probs_fake`**
 
+    ```{r}
+    probs_fake <- (60/150) * 0.08242154 * 0.07179166 * 0.7333333
+    probs_fake
+    ```
+
 Lastly divide your **`probs_real`** by the sum of **`probs_real`** and **`probs_fake`** to see if you can reproduce the output from `naiveBayes()` above
+
+```{r}
+#dnorm approach
+fake_news_NB2 <- probs_real / (probs_real+probs_fake)
+fake_news_NB2
+```
+
+```{r}
+#naiveBayes() approach above
+fake_news_NB1 <- predict(fake_news_NB, newdata = our_fake_news, type = "raw")[1,2]
+```
+
+```{r}
+#rounded to 6 decimal places, this shows that the naiveBayes() above is equal to the dnorm approach
+round(fake_news_NB1, 6) == round(fake_news_NB2, 6) 
+```
 
 ### Confusion Matrix - 2 points
 
 Calculate a confusion matrix by first mutating a column to fake_news called `predicted_type` . Then, use `tabyl()` to create the matrix
 
+```{r}
+fake_news_cm <- fake_news %>% 
+  mutate(predicted_type = predict(fake_news_NB, newdata =.))
+```
+
+```{r}
+#colnames(fake_news_cm)
+fake_news_cm %>% 
+  tabyl(type, predicted_type) %>% 
+  adorn_percentages("row") %>% 
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns
+  
+```
+
 ### How can our model be improved? - 2 points
 
 Think about the results of the confusion matrix, is the model performing well? Try creating a new model that uses all of the features in the fake_news dataset to make a prediction on type (fake vs true). Then, create a new confusion matrix to see if the model improves.
+
+```{r}
+fake_news_NB3 <- naiveBayes(type ~ ., data = fake_news)
+fake_news_NB4 <- fake_news %>% 
+  mutate(predicted_type = predict(fake_news_NB3, newdata = .))
+fake_news_NB4 %>% 
+  tabyl(type, predicted_type) %>% 
+  adorn_percentages("row") %>% 
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns
+```
+
+Current model (all features) performs better.
+
+The current model that used all of the features to identify both true positives and true negatives is performing at a better accuracy rate at 97 and 98%, respectively. In effect, this caused the reduction of false positive and false negative rates. The previous model using only three features was good at identifying real news. However, it was concerning that the model incorrectly identifies fake news at 51.67%.
