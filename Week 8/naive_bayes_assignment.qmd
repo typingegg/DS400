@@ -1,6 +1,7 @@
 ---
 title: "Naive Bayes Classification Assignment"
 author: "Eugene Garvilles"
+subtitle: "[Github Link](https://github.com/NSF-ALL-SPICE-Alliance/DS400/blob/main/week8/lecture_naive_bayes_breast_cancer.qmd)"
 format:
   pdf:
     documentclass: scrartcl
